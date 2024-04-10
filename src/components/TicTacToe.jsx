@@ -66,15 +66,6 @@ function TicTacToe() {
     [makeVirtualMove]
   );
 
-  // 8 = 8
-  // 7 = 56
-  // 6 = 336
-  // 5 = 1680
-  // 4 = 6720
-  // 3 = 20160
-  // 2 = 40320
-  // 1 = 40320
-
   const findBestMove = useCallback(() => {
     let bestScore = -2;
     let moves = [];
@@ -116,50 +107,15 @@ function TicTacToe() {
 
   const renderGameSquares = () =>
     gameBoard.map((square, idx) => (
-      <div key={idx} className="game-square" onClick={() => makeMove(idx, "X")}>
+      <div
+        key={idx}
+        className="game-square"
+        style={endMessage ? { pointerEvents: "none" } : {}}
+        onClick={() => makeMove(idx, "X")}
+      >
         {square}
       </div>
     ));
-
-  useEffect(() => {
-    if (currentPlayer === "O" && !endMessage) {
-      const timeOut = () =>
-        setTimeout(() => {
-          let move = findBestMove();
-          if (move || move === 0) {
-            makeMove(move, "O");
-          }
-
-          let win = checkWin();
-          console.log("win: ", win);
-
-          if (win || getValidMoves().length === 0) {
-            if (win) {
-              setEndMessage(`${win} wins!`);
-            } else {
-              setEndMessage("It's a tie!");
-            }
-          } else {
-            setCurrentPlayer("X");
-          }
-        }, 2000);
-
-      timeOut();
-
-      clearTimeout(timeOut);
-    }
-  }, [currentPlayer, findBestMove, makeMove, endMessage]);
-
-  useEffect(() => {
-    const X = gameBoard.filter((char) => char === "X");
-    const O = gameBoard.filter((char) => char === "O");
-
-    if (X.length > O.length) {
-      setCurrentPlayer("O");
-    } else {
-      setCurrentPlayer("X");
-    }
-  }, [gameBoard]);
 
   function isValidMove(position) {
     return !virtualBoard.current[position];
@@ -205,11 +161,58 @@ function TicTacToe() {
     );
   }
 
+  function reset() {
+    setGameBoard(["", "", "", "", "", "", "", "", ""]);
+    virtualBoard.current = ["", "", "", "", "", "", "", "", ""];
+    setEndMessage("");
+  }
+
+  useEffect(() => {
+    if (currentPlayer === "O" && !endMessage) {
+      const timeOut = () =>
+        setTimeout(() => {
+          let move = findBestMove();
+          if (move || move === 0) {
+            makeMove(move, "O");
+          }
+
+          let win = checkWin();
+          console.log("win: ", win);
+
+          if (win || getValidMoves().length === 0) {
+            if (win) {
+              setEndMessage(`${win} wins!`);
+            } else {
+              setEndMessage("It's a tie!");
+            }
+          } else {
+            setCurrentPlayer("X");
+          }
+        }, 2000);
+
+      timeOut();
+
+      clearTimeout(timeOut);
+    }
+  }, [currentPlayer, findBestMove, makeMove, endMessage]);
+
+  useEffect(() => {
+    const X = gameBoard.filter((char) => char === "X");
+    const O = gameBoard.filter((char) => char === "O");
+
+    if (X.length > O.length) {
+      setCurrentPlayer("O");
+    } else {
+      setCurrentPlayer("X");
+    }
+  }, [gameBoard]);
+
   return (
     <div className="tic-tac-toe-container">
       <div className="tic-tac-toe-wrapper">
         {renderGameSquares()}
         <div>{endMessage}</div>
+        {endMessage && <button onClick={reset}>Reset</button>}
       </div>
     </div>
   );

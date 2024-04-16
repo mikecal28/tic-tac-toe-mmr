@@ -1,4 +1,12 @@
 .tic-tac-toe-container {
+  width: 100vw;
+  min-height: 100vh;
+  background-color: orange;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
   .tic-tac-toe-wrapper {
     width: 500px;
     height: 500px;

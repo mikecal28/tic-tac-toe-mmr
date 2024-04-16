@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
 function TicTacToe() {
   const [currentPlayer, setCurrentPlayer] = useState("X");
@@ -209,6 +210,7 @@ function TicTacToe() {
 
   return (
     <div className="tic-tac-toe-container">
+      <Link to="/">Main Menu</Link>
       <div className="tic-tac-toe-wrapper">
         {renderGameSquares()}
         <div>{endMessage}</div>

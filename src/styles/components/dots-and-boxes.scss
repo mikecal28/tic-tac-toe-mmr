@@ -10,24 +10,93 @@
   .dots-and-boxes-wrapper {
     width: 500px;
     height: 500px;
-    background-color: red;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
+    background-color: transparent;
+    display: flex;
+    flex-direction: column;
 
-    // .game-square {
-    //   display: flex;
-    //   justify-content: center;
-    //   align-items: center;
-    //   width: 100%;
-    //   height: 100%;
-    //   border: 1px solid black;
-    //   font-size: 125px;
-    //   cursor: pointer;
+    .lines-wrapper {
+      width: 100%;
+      height: 100%;
 
-    //   &:hover {
-    //     background-color: crimson;
-    //   }
-    // }
+      .horizontal-group {
+        width: 100%;
+        height: 5px;
+        display: flex;
+
+        .horizontal-lines {
+          height: 100%;
+          background-color: transparent;
+
+          &:hover {
+            background-color: white;
+            cursor: pointer;
+          }
+
+          &:active {
+            background-color: black;
+          }
+        }
+
+        .active {
+          background-color: black;
+
+          &:hover {
+            background-color: black;
+          }
+        }
+      }
+
+      .vertical-group {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+
+        .vertical-lines {
+          width: 5px;
+          height: 100%;
+          background-color: transparent;
+
+          &:hover {
+            background-color: white;
+            cursor: pointer;
+          }
+
+          &:active {
+            background-color: black;
+          }
+        }
+
+        .active {
+          background-color: black;
+
+          &:hover {
+            background-color: black;
+          }
+        }
+      }
+    }
+
+    .dots-wrapper {
+      position: absolute;
+      width: 512px;
+      height: 512px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transform: translate(-6px, -6px);
+      pointer-events: none;
+
+      .dot-group {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        .dot {
+          width: 15px;
+          height: 15px;
+          background-color: black;
+          border-radius: 50%;
+        }
+      }
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export default function useMiniMax(gameBoard, setGameBoard) {
+export default function useMiniMax(gameBoard, setGameBoard, checkWin) {
   const [currentPlayer, setCurrentPlayer] = useState("X");
   const [endMessage, setEndMessage] = useState("");
 
@@ -53,7 +53,7 @@ export default function useMiniMax(gameBoard, setGameBoard) {
         return { score: bestScore };
       }
     },
-    [makeVirtualMove]
+    [makeVirtualMove, checkWin]
   );
 
   const findBestMove = useCallback(() => {
@@ -99,44 +99,11 @@ export default function useMiniMax(gameBoard, setGameBoard) {
     return !virtualBoard.current[position];
   }
 
-  function checkWin() {
-    const winningCombinations = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
-    ];
-
-    let winner = false;
-    winningCombinations.forEach((combo) => {
-      let a = combo[0];
-      let b = combo[1];
-      let c = combo[2];
-
-      if (
-        virtualBoard.current[a] &&
-        virtualBoard.current[a] === virtualBoard.current[b] &&
-        virtualBoard.current[a] === virtualBoard.current[c]
-      ) {
-        winner = virtualBoard.current[a];
-      }
-    });
-
-    if (!winner && !virtualBoard.current.includes("")) {
-      return "tie";
-    }
-
-    return winner;
-  }
-
   function getValidMoves() {
-    return [0, 1, 2, 3, 4, 5, 6, 7, 8].filter(
-      (move) => !virtualBoard.current[move]
-    );
+    return Array.from(
+      { length: virtualBoard.current.length },
+      (_, index) => index
+    ).filter((move) => !virtualBoard.current[move]);
   }
 
   function reset() {
@@ -170,10 +137,10 @@ export default function useMiniMax(gameBoard, setGameBoard) {
         }, 2000);
 
       timeOut();
-
-      clearTimeout(timeOut);
     }
-  }, [currentPlayer, findBestMove, makeMove, endMessage]);
+
+    return (timeOut) => (timeOut ? clearTimeout(timeOut) : null);
+  }, [currentPlayer, findBestMove, makeMove, endMessage, checkWin]);
 
   useEffect(() => {
     const X = gameBoard.filter((char) => char === "X");
@@ -186,5 +153,5 @@ export default function useMiniMax(gameBoard, setGameBoard) {
     }
   }, [gameBoard]);
 
-  return { reset, makeMove, endMessage };
+  return { reset, makeMove, endMessage, virtualBoard };
 }

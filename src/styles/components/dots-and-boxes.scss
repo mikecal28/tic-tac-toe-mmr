@@ -15,16 +15,18 @@
     flex-direction: column;
 
     .lines-wrapper {
+      display: grid;
       width: 100%;
       height: 100%;
 
       .horizontal-group {
         width: 100%;
-        height: 5px;
+        height: 100%;
         display: flex;
 
         .horizontal-lines {
           height: 100%;
+          width: 100%;
           background-color: transparent;
 
           &:hover {

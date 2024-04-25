@@ -1,9 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import useMiniMax from "../hooks/useMiniMax";
 
 function DotsAndBoxes() {
-  const boardSize = useRef([4, 4]);
+  const boardSize = useRef([3, 3]);
+  const [currentPlayer, setCurrentPlayer] = useState("X");
+  const [playerOneScore, setPlayerOneScore] = useState(0);
+  const [playerTwoScore, setPlayerTwoScore] = useState(0);
+  const [totalScore, setTotalScore] = useState(0);
+  const [endMessage, setEndMessage] = useState("");
   const [gameBoard, setGameBoard] = useState(
     new Array(boardSize.current[0] * 2 + 1).fill(0).map((_, idx) => {
       if (idx % 2 === 0) {
@@ -20,51 +25,68 @@ function DotsAndBoxes() {
   //   checkWin
   // );
 
-  // const renderGameSquares = () =>
-  //   gameBoard.map((square, idx) => (
-  //     <div
-  //       key={idx}
-  //       className="game-square"
-  //       style={endMessage ? { pointerEvents: "none" } : {}}
-  //       onClick={() => makeMove(idx, "X")}
-  //     >
-  //       {square}
-  //     </div>
-  //   ));
+  const checkWin = useCallback(() => {
+    let isFinished = true;
 
-  // function checkWin() {
-  //   const winningCombinations = [
-  //     [0, 1, 2],
-  //     [3, 4, 5],
-  //     [6, 7, 8],
-  //     [0, 3, 6],
-  //     [1, 4, 7],
-  //     [2, 5, 8],
-  //     [0, 4, 8],
-  //     [2, 4, 6],
-  //   ];
+    gameBoard.forEach((_, xIdx) => {
+      gameBoard[xIdx].forEach((line) => {
+        if (!line) isFinished = false;
+      });
+    });
 
-  //   let winner = false;
-  //   winningCombinations.forEach((combo) => {
-  //     let a = combo[0];
-  //     let b = combo[1];
-  //     let c = combo[2];
+    if (isFinished) {
+      if (playerOneScore > playerTwoScore) {
+        return "X";
+      } else if (playerTwoScore > playerOneScore) {
+        return "O";
+      } else {
+        return "tie";
+      }
+    }
 
-  //     if (
-  //       virtualBoard.current[a] &&
-  //       virtualBoard.current[a] === virtualBoard.current[b] &&
-  //       virtualBoard.current[a] === virtualBoard.current[c]
-  //     ) {
-  //       winner = virtualBoard.current[a];
-  //     }
-  //   });
+    return isFinished;
+  }, [gameBoard, playerOneScore, playerTwoScore]);
 
-  //   if (!winner && !virtualBoard.current.includes("")) {
-  //     return "tie";
-  //   }
+  const tallyScore = useCallback(
+    (player) => {
+      const isBox = (x, y) => {
+        const lineOne = gameBoard[x][y];
+        const lineTwo = gameBoard[x + 1][y];
+        const lineThree = gameBoard[x + 1][y + 1];
+        const lineFour = gameBoard[x + 2][y];
 
-  //   return winner;
-  // }
+        if (lineOne && lineTwo && lineThree && lineFour) {
+          return true;
+        }
+
+        return false;
+      };
+
+      let currentBoxes = 0;
+      Array.from({ length: gameBoard.length }, (_, index) => index).forEach(
+        (_, xIdx) => {
+          if (xIdx % 2 === 0 && xIdx + 1 !== gameBoard.length) {
+            gameBoard[xIdx].forEach((_, yIdx) => {
+              if (isBox(xIdx, yIdx)) {
+                currentBoxes += 1;
+              }
+            });
+          }
+        }
+      );
+
+      const pointsToAdd = currentBoxes - totalScore;
+
+      if (player === "X") {
+        setPlayerOneScore((prev) => (prev += pointsToAdd));
+        setCurrentPlayer("O");
+      } else {
+        setPlayerTwoScore((prev) => (prev += pointsToAdd));
+        setCurrentPlayer("X");
+      }
+    },
+    [gameBoard, totalScore]
+  );
 
   const renderLines = () => {
     return Array.from(
@@ -90,9 +112,6 @@ function DotsAndBoxes() {
                       return [...prev];
                     })
                   }
-                  style={{
-                    width: `calc(${Math.floor(100 / boardSize.current[0])}%)`,
-                  }}
                 />
               );
             })}
@@ -100,13 +119,7 @@ function DotsAndBoxes() {
         );
       } else {
         return (
-          <div
-            key={groupIdx}
-            className="vertical-group"
-            style={{
-              height: `calc(${Math.floor(100 / boardSize.current[1])}% - 5px)`,
-            }}
-          >
+          <div key={groupIdx} className="vertical-group">
             {Array.from(
               { length: boardSize.current[1] + 1 },
               (_, index) => index
@@ -154,17 +167,55 @@ function DotsAndBoxes() {
     console.log("game: ", gameBoard);
   }, [gameBoard]);
 
+  useEffect(() => {
+    if (!endMessage) {
+      let totalLines = 0;
+      gameBoard.forEach((_, xIdx) => {
+        gameBoard[xIdx].forEach((line) => {
+          if (line) totalLines += 1;
+        });
+      });
+
+      if (totalLines % 2 !== 0) {
+        tallyScore("X");
+      } else {
+        tallyScore("O");
+      }
+    }
+  }, [gameBoard, endMessage, tallyScore]);
+
+  useEffect(() => {
+    console.log("currentPlayer: ", currentPlayer);
+  }, [currentPlayer]);
+
+  useEffect(() => {
+    setTotalScore(playerOneScore + playerTwoScore);
+    console.log("playerOneScore: ", playerOneScore);
+    console.log("playerTwoScore: ", playerTwoScore);
+  }, [playerOneScore, playerTwoScore]);
+
+  useEffect(() => {
+    const winner = checkWin();
+    console.log("winner: ", winner);
+    if (winner) setEndMessage(`${winner} wins!`);
+  }, [totalScore, checkWin]);
+
   return (
     <div className="dots-and-boxes-container">
       <Link to="/">Main Menu</Link>
       <div className="dots-and-boxes-wrapper">
-        <div className="lines-wrapper">{renderLines()}</div>
-
+        <div
+          className="lines-wrapper"
+          style={{
+            gridTemplateRows: `repeat(${boardSize.current[1]}, 5px auto) 5px`,
+          }}
+        >
+          {renderLines()}
+        </div>
         <div className="dots-wrapper">{renderDots()}</div>
-
-        {/* <div>{endMessage}</div>
-        {endMessage && <button onClick={reset}>Reset</button>} */}
+        {/* {endMessage && <button onClick={reset}>Reset</button>} */}
       </div>
+      <div>{endMessage}</div>
     </div>
   );
 }

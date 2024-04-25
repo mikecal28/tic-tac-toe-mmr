@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import useMiniMax from "../hooks/useMiniMax";
 
 function DotsAndBoxes() {
-  const boardSize = useRef([3, 3]);
+  const boardSize = useRef([5, 5]);
   const [currentPlayer, setCurrentPlayer] = useState("X");
   const [playerOneScore, setPlayerOneScore] = useState(0);
   const [playerTwoScore, setPlayerTwoScore] = useState(0);
@@ -163,6 +163,34 @@ function DotsAndBoxes() {
     });
   };
 
+  const renderWins = () => {
+    return Array.from(
+      { length: boardSize.current[1] },
+      (_, index) => index
+    ).map((dotIdx) => {
+      return (
+        <div
+          key={dotIdx}
+          className="win-group"
+          style={{
+            gridTemplateColumns: `repeat(${boardSize.current[1]}, 1fr)`,
+          }}
+        >
+          {Array.from(
+            { length: boardSize.current[0] },
+            (_, index) => index
+          ).map((dotIdx) => {
+            return (
+              <div key={dotIdx} className="win">
+                X
+              </div>
+            );
+          })}
+        </div>
+      );
+    });
+  };
+
   useEffect(() => {
     console.log("game: ", gameBoard);
   }, [gameBoard]);
@@ -213,6 +241,12 @@ function DotsAndBoxes() {
           {renderLines()}
         </div>
         <div className="dots-wrapper">{renderDots()}</div>
+        <div
+          className="wins-wrapper"
+          style={{ gridAutoRows: `repeat(${boardSize.current[0]}, 1fr)` }}
+        >
+          {renderWins()}
+        </div>
         {/* {endMessage && <button onClick={reset}>Reset</button>} */}
       </div>
       <div>{endMessage}</div>

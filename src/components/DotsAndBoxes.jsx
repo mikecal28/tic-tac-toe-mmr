@@ -9,6 +9,7 @@ function DotsAndBoxes() {
   const [playerTwoScore, setPlayerTwoScore] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
   const [endMessage, setEndMessage] = useState("");
+  const [closedBoxes, setClosedBoxes] = useState([]);
   const [gameBoard, setGameBoard] = useState(
     new Array(boardSize.current[0] * 2 + 1).fill(0).map((_, idx) => {
       if (idx % 2 === 0) {
@@ -69,6 +70,21 @@ function DotsAndBoxes() {
             gameBoard[xIdx].forEach((_, yIdx) => {
               if (isBox(xIdx, yIdx)) {
                 currentBoxes += 1;
+                setClosedBoxes((prev) => {
+                  const doesExist = prev.reduce((acc, box) => {
+                    if (box[0] === xIdx && box[1] === yIdx) {
+                      acc = true;
+                    }
+
+                    return acc;
+                  }, false);
+
+                  if (!doesExist) {
+                    return [...prev, [xIdx, yIdx, player]];
+                  }
+
+                  return prev;
+                });
               }
             });
           }
@@ -149,9 +165,9 @@ function DotsAndBoxes() {
     return Array.from(
       { length: boardSize.current[1] + 1 },
       (_, index) => index
-    ).map((dotIdx) => {
+    ).map((dotGroupIdx) => {
       return (
-        <div key={dotIdx} className="dot-group">
+        <div key={dotGroupIdx} className="dot-group">
           {Array.from(
             { length: boardSize.current[0] + 1 },
             (_, index) => index
@@ -167,10 +183,10 @@ function DotsAndBoxes() {
     return Array.from(
       { length: boardSize.current[1] },
       (_, index) => index
-    ).map((dotIdx) => {
+    ).map((winGroupIdx) => {
       return (
         <div
-          key={dotIdx}
+          key={winGroupIdx}
           className="win-group"
           style={{
             gridTemplateColumns: `repeat(${boardSize.current[1]}, 1fr)`,
@@ -179,10 +195,23 @@ function DotsAndBoxes() {
           {Array.from(
             { length: boardSize.current[0] },
             (_, index) => index
-          ).map((dotIdx) => {
+          ).map((winIdx) => {
+            const coordinates = [winGroupIdx * 2, winIdx];
+            const closedBoxesCopy = [...closedBoxes];
+            const isWin = closedBoxesCopy.reduce((acc, box) => {
+              if (box[0] === coordinates[0] && box[1] === coordinates[1]) {
+                acc = box[2];
+              }
+              return acc;
+            }, "W");
+
             return (
-              <div key={dotIdx} className="win">
-                X
+              <div
+                key={winIdx}
+                className="win"
+                style={isWin === "W" ? { visibility: "hidden" } : {}}
+              >
+                {isWin}
               </div>
             );
           })}
@@ -227,6 +256,10 @@ function DotsAndBoxes() {
     console.log("winner: ", winner);
     if (winner) setEndMessage(`${winner} wins!`);
   }, [totalScore, checkWin]);
+
+  useEffect(() => {
+    console.log("closedBoxes: ", closedBoxes);
+  }, [closedBoxes]);
 
   return (
     <div className="dots-and-boxes-container">

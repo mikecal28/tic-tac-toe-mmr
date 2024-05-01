@@ -1,9 +1,12 @@
+// Prevent clicking lines that are already drawn.
+// Make winner letters size dynamically.
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import useMiniMax from "../hooks/useMiniMax";
 
 function DotsAndBoxes() {
-  const boardSize = useRef([5, 5]);
+  const boardSize = useRef([2, 2]);
   const [currentPlayer, setCurrentPlayer] = useState("X");
   const [playerOneScore, setPlayerOneScore] = useState(0);
   const [playerTwoScore, setPlayerTwoScore] = useState(0);
@@ -48,61 +51,62 @@ function DotsAndBoxes() {
     return isFinished;
   }, [gameBoard, playerOneScore, playerTwoScore]);
 
-  const tallyScore = useCallback(
-    (player) => {
-      const isBox = (x, y) => {
-        const lineOne = gameBoard[x][y];
-        const lineTwo = gameBoard[x + 1][y];
-        const lineThree = gameBoard[x + 1][y + 1];
-        const lineFour = gameBoard[x + 2][y];
+  const tallyScore = (board) => {
+    const isBox = (x, y) => {
+      const lineOne = board[x][y];
+      const lineTwo = board[x + 1][y];
+      const lineThree = board[x + 1][y + 1];
+      const lineFour = board[x + 2][y];
 
-        if (lineOne && lineTwo && lineThree && lineFour) {
-          return true;
-        }
+      if (lineOne && lineTwo && lineThree && lineFour) {
+        return true;
+      }
 
-        return false;
-      };
+      return false;
+    };
 
-      let currentBoxes = 0;
-      Array.from({ length: gameBoard.length }, (_, index) => index).forEach(
-        (_, xIdx) => {
-          if (xIdx % 2 === 0 && xIdx + 1 !== gameBoard.length) {
-            gameBoard[xIdx].forEach((_, yIdx) => {
-              if (isBox(xIdx, yIdx)) {
-                currentBoxes += 1;
-                setClosedBoxes((prev) => {
-                  const doesExist = prev.reduce((acc, box) => {
-                    if (box[0] === xIdx && box[1] === yIdx) {
-                      acc = true;
-                    }
-
-                    return acc;
-                  }, false);
-
-                  if (!doesExist) {
-                    return [...prev, [xIdx, yIdx, player]];
+    let currentBoxes = 0;
+    Array.from({ length: board.length }, (_, index) => index).forEach(
+      (_, xIdx) => {
+        if (xIdx % 2 === 0 && xIdx + 1 !== board.length) {
+          board[xIdx].forEach((_, yIdx) => {
+            if (isBox(xIdx, yIdx)) {
+              currentBoxes += 1;
+              setClosedBoxes((prev) => {
+                const doesExist = prev.reduce((acc, box) => {
+                  if (box[0] === xIdx && box[1] === yIdx) {
+                    acc = true;
                   }
 
-                  return prev;
-                });
-              }
-            });
-          }
+                  return acc;
+                }, false);
+
+                if (!doesExist) {
+                  return [...prev, [xIdx, yIdx, currentPlayer]];
+                }
+
+                return prev;
+              });
+            }
+          });
         }
-      );
+      }
+    );
 
-      const pointsToAdd = currentBoxes - totalScore;
+    const pointsToAdd = currentBoxes - totalScore;
 
-      if (player === "X") {
-        setPlayerOneScore((prev) => (prev += pointsToAdd));
+    if (currentPlayer === "X") {
+      setPlayerOneScore((prev) => (prev += pointsToAdd));
+      if (!pointsToAdd) {
         setCurrentPlayer("O");
-      } else {
-        setPlayerTwoScore((prev) => (prev += pointsToAdd));
+      }
+    } else {
+      setPlayerTwoScore((prev) => (prev += pointsToAdd));
+      if (!pointsToAdd) {
         setCurrentPlayer("X");
       }
-    },
-    [gameBoard, totalScore]
-  );
+    }
+  };
 
   const renderLines = () => {
     return Array.from(
@@ -125,6 +129,7 @@ function DotsAndBoxes() {
                   onClick={() =>
                     setGameBoard((prev) => {
                       prev[groupIdx].splice(lineIdx, 1, "X");
+                      tallyScore(prev);
                       return [...prev];
                     })
                   }
@@ -149,6 +154,7 @@ function DotsAndBoxes() {
                   onClick={() =>
                     setGameBoard((prev) => {
                       prev[groupIdx].splice(lineIdx, 1, "X");
+                      tallyScore(prev);
                       return [...prev];
                     })
                   }
@@ -219,27 +225,6 @@ function DotsAndBoxes() {
       );
     });
   };
-
-  useEffect(() => {
-    console.log("game: ", gameBoard);
-  }, [gameBoard]);
-
-  useEffect(() => {
-    if (!endMessage) {
-      let totalLines = 0;
-      gameBoard.forEach((_, xIdx) => {
-        gameBoard[xIdx].forEach((line) => {
-          if (line) totalLines += 1;
-        });
-      });
-
-      if (totalLines % 2 !== 0) {
-        tallyScore("X");
-      } else {
-        tallyScore("O");
-      }
-    }
-  }, [gameBoard, endMessage, tallyScore]);
 
   useEffect(() => {
     console.log("currentPlayer: ", currentPlayer);
